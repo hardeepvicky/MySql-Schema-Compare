@@ -1,0 +1,26 @@
+[
+    {
+        "name": "hardeep-vicky/php-query-builder",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/hardeepvicky/Php-Query-Builder.git",
+            "reference": "d7e5749754f48a126e0b59fa2ba24b0e847692b6"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/hardeepvicky/Php-Query-Builder/zipball/d7e5749754f48a126e0b59fa2ba24b0e847692b6",
+            "reference": "d7e5749754f48a126e0b59fa2ba24b0e847692b6",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.2"
+        },
+        "time": "2019-10-01T07:38:24+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "notification-url": "https://packagist.org/downloads/",
+        "description": "Query builder Tool for Php"
+    }
+]

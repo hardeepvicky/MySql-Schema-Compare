@@ -1,0 +1,39 @@
+# User specific & automatically generated files #
+#################################################
+/app/Config/env.php
+/app/Config/database.php
+/app/tmp
+/lib/Cake/Console/Templates/skel/tmp/
+/plugins
+/build
+/dist
+/tags
+/app/webroot/temp/
+/app/webroot/img/temp/
+/app/webroot/backup/
+*.mo
+
+/app/webroot/files
+/app/webroot/android
+/app/webroot/backup
+
+# IDE and editor specific files #
+#################################
+/nbproject
+.idea
+/.project
+/.buildpath
+/.settings/
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+composer.lock
+.well-known
