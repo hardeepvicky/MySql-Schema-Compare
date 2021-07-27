@@ -1,7 +1,7 @@
-#introduction
+# introduction
 This is PHP Tool for Mysql Database for Schema Compare
 
-#Usage
+# Usage
 Just Download Code put in htdocs
 
 Create Virtual Domain for folder e.g. dev.mysql-schema-compare.com
