@@ -259,10 +259,10 @@ class Home extends MenuItem
             'link' => [
                 'controller' => 'Dashboards',
                 'action' => 'index',
-                'admin' => true
             ],
         ];
         
+        $this->isAjax = TRUE;
         $submenu['links'][] = $this->Compare();
         
         return $submenu;
