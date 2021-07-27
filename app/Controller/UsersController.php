@@ -215,8 +215,5 @@ class UsersController extends AppController
 
     private function _setList()
     {
-        $group_list = $this->User->Group->findCacheList("id", "name", ["name ASC"]);
-        
-        $this->set(compact("group_list"));
     }
 }

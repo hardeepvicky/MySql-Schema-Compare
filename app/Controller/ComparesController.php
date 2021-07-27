@@ -47,6 +47,9 @@ class ComparesController extends AppController
             throw new Exception("Invalid Id : $id");
         }
         
+        $this->_check_database_exist($record[$this->modelClass]['src_db_name']);
+        $this->_check_database_exist($record[$this->modelClass]['dest_db_name']);
+        
         $src_db = $this->_find_table_meta($record[$this->modelClass]['src_db_name']);
         $dest_db = $this->_find_table_meta($record[$this->modelClass]['dest_db_name']);
         
@@ -565,6 +568,18 @@ class ComparesController extends AppController
         }
              
         return $list;
+    }
+    
+    private function _check_database_exist($db_name)
+    {
+        $q = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$db_name'";
+        
+        $temp = $this->{$this->modelClass}->query($q);
+        
+        if (!$temp)
+        {
+            throw new Exception("Database `$db_name` is not exist");
+        }
     }
     
     private function _find_table_meta($db_name)

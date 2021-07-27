@@ -26,19 +26,6 @@ $disabled = $action == "edit" ? "disabled" : "";
             </section>
 
             <div class="form-group">
-                <label class="control-label col-md-3 col-sm-4 col-xs-12">Group <span>*</span> :</label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                    <?= $this->Form->input('group_id', array(
-                        "id" => "group_id",
-                        "type" => "select",
-                        "class" => "form-control select2me  ",
-                        'options' => $group_list,
-                        "empty" => EMPTY_SELECT
-                        )); ?>
-                </div>
-            </div>
-
-            <div class="form-group">
                 <label class="control-label col-md-3 col-sm-4 col-xs-12">Username <span>*</span> :</label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
                     <?= $this->Form->input('username', array('placeholder' => 'Username')); ?>
@@ -69,13 +56,6 @@ $disabled = $action == "edit" ? "disabled" : "";
                 <label class="control-label col-md-3 col-sm-4 col-xs-12">Last Name :</label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
                     <?= $this->Form->input('lastname', array('placeholder' => 'Last Name', array($disabled))); ?>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label class="control-label col-md-3 col-sm-4 col-xs-12">Email <span>*</span> :</label>
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                    <?= $this->Form->input('email', array('placeholder' => 'Email')); ?>
                 </div>
             </div>
             
