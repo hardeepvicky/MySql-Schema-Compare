@@ -181,7 +181,7 @@
                                         </td>
                                     <?php endif; ?>
                                     
-                                    <?php if ($table_arr['is_new']): ?>
+                                    <?php if ( isset($table_arr['is_new']) ): ?>
                                         <td class="blank_col center have_diff will_create_table"> Yes </td>
                                         <td class="dest_col" colspan="7">
                                             Table Not Present
@@ -244,7 +244,9 @@
 </div>
 
 <script type="text/javascript">
-    var records = JSON.parse('<?= json_encode($records) ?>');
+    var sql = JSON.parse('<?= json_encode($records['sql']) ?>');
+    var src_db_name = '<?= $src_db_name ?>';
+    var dest_db_name = '<?= $dest_db_name ?>';
     $(document).ready(function()
     {
         $("input#compare_show_only_difference_tr").change(function()
@@ -300,26 +302,128 @@
         
         function generate_sql()
         {
-            var sql = "";
+            var text = "#SQL for database " + dest_db_name + " \n";
+            text += "#Created " + get_current_time() + " \n\n";
             
-            for(var table_name in records['tables'])
+            if ( $("input#sql_gen_new_table").is(":checked") )
             {
-                var is_check = $("#table_" + table_name).prop("checked");
-                
-                if (is_check)
+                text += "#CREATE TABLE \n\n";
+                for (var table_name in sql['new_table'])
                 {
-                    if (records['tables'][table_name]['is_new'])
+                    if ( $("input#table_" + table_name).is(":checked") )
                     {
-                        sql_create_table(table_name, records['tables'][table_name]['columns'])
+                        for(var i in sql['new_table'][table_name])
+                        {
+                            text += sql['new_table'][table_name][i] + ";\n";
+                        }
                     }
                 }
+                text += "\n\n";
             }
+            
+            
+            if ( $("input#sql_gen_delete_table").is(":checked") )
+            {
+                text += "#DELETE TABLE \n\n";
+                for (var table_name in sql['delete_table'])
+                {
+                    if ( $("input#table_" + table_name).is(":checked") )
+                    {
+                        for(var i in sql['delete_table'][table_name])
+                        {
+                            text += sql['delete_table'][table_name][i] + ";\n";
+                        }
+                    }
+                }
+                text += "\n\n";
+            }
+            
+            if ( $("input#sql_gen_new_column").is(":checked") )
+            {
+                text += "#NEW COLUMN \n\n";
+                for (var table_name in sql['new_column'])
+                {
+                    if ( $("input#table_" + table_name).is(":checked") )
+                    {
+                        for(var i in sql['new_column'][table_name])
+                        {
+                            text += sql['new_column'][table_name][i] + ";\n";
+                        }
+                    }
+                }
+                text += "\n\n";
+            }
+            
+            if ( $("input#sql_gen_delete_column").is(":checked") )
+            {
+                text += "#DELETE COLUMN \n\n";
+                for (var table_name in sql['delete_column'])
+                {
+                    if ( $("input#table_" + table_name).is(":checked") )
+                    {
+                        for(var i in sql['delete_column'][table_name])
+                        {
+                            text += sql['delete_column'][table_name][i] + ";\n";
+                        }
+                    }
+                }
+                text += "\n\n";
+            }
+            
+            if ( $("input#sql_gen_change_column").is(":checked") )
+            {
+                text += "#CHANGE COLUMN \n\n";
+                for (var table_name in sql['change_column'])
+                {
+                    if ( $("input#table_" + table_name).is(":checked") )
+                    {
+                        for(var i in sql['change_column'][table_name])
+                        {
+                            text += sql['change_column'][table_name][i] + ";\n";
+                        }
+                    }
+                }
+                text += "\n\n";
+            }
+            
+            download(dest_db_name + ".sql", text);
         }
         
-        function sql_create_table(table_name, columns)
+        function download(filename, text) 
         {
-            console.log(table_name);
-            console.log(columns);
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
+        }
+        
+        function get_current_time()
+        {
+            var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            var d = new Date();
+            var day = days[d.getDay()];
+            var hr = d.getHours();
+            var min = d.getMinutes();
+            if (min < 10) {
+                min = "0" + min;
+            }
+            var ampm = "am";
+            if( hr > 12 ) {
+                hr -= 12;
+                ampm = "pm";
+            }
+            var date = d.getDate();
+            var month = months[d.getMonth()];
+            var year = d.getFullYear();
+            
+            return date + "-" + month + "-" + year + " " + hr + ":" + min + " " + ampm;
         }
     });
 </script>
