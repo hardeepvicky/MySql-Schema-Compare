@@ -89,8 +89,7 @@
 <div class="page-header navbar navbar-fixed-top">
     <div class="page-header-inner ">
         <div class="page-logo">
-            <a href="/">
-                <img src="/img/company_name.png" alt="logo" class="logo-default" /> </a>
+            
             <div class="menu-toggler sidebar-toggler">
                 <span></span>
             </div>

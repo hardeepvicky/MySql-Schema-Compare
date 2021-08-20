@@ -50,12 +50,6 @@
     <!-- END HEAD -->
 
     <body class="login">
-        <!-- BEGIN LOGO -->
-        <div class="logo">
-            <img src="/img/company_name_black.png" alt="" /> 
-        </div>
-        <!-- END LOGO -->
-        
         <?php echo $this->fetch('content'); ?>
         
         <!--[if lt IE 9]>
