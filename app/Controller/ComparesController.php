@@ -238,7 +238,7 @@ class ComparesController extends AppController
                 }
             }
         }
-        
+		
         $src_db_name = $record[$this->modelClass]['src_db_name'];
         $dest_db_name = $record[$this->modelClass]['dest_db_name'];
         
@@ -327,7 +327,7 @@ class ComparesController extends AppController
                         $records['sql']['new_column'][$table_name][] = $sql_str;
                     }
                     else if ( isset ($column_arr['is_change']) )
-                    {
+                    {	
                         if (
                             $column_arr['src']['data_type'] != $column_arr['dest']['data_type'] 
                             || $column_arr['src']['length'] != $column_arr['dest']['length'] 
@@ -338,7 +338,7 @@ class ComparesController extends AppController
                         {
                             $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
                         
-                            $sql_str .= " CHANGE COLUMN `$field_name` " . $this->_create_table_field($field_name, $column_arr['src']);
+                            $sql_str .= " CHANGE COLUMN `$column_name` " . $this->_create_table_field($column_name, $column_arr['src']);
                             
                             $records['sql']['change_column'][$table_name][] = $sql_str;
                         }
@@ -442,7 +442,7 @@ class ComparesController extends AppController
                 }
             }
         }
-        
+		
         $this->set(compact("records", "src_db_name", "dest_db_name"));
     }
     
@@ -471,11 +471,11 @@ class ComparesController extends AppController
         
         if ($attr['null'])
         {
-            $str .= " NOT NULL";
+            $str .= " NULL";
         }
         else
         {
-            $str .= " NULL";
+			$str .= " NOT NULL";
         }
             
         if ($attr['autoincrement'])
