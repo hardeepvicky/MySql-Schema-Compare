@@ -48,9 +48,5 @@
         <button type="submit" class="btn red btn-block uppercase">Login</button>
     </div>
 
-    <div style="text-align: right;">
-        <a href="/Users/forgot_password">Forgot Password</a>
-    </div>
-
 <?php echo $this->Form->end(); ?>
 </div>

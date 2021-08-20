@@ -48,14 +48,14 @@ $disabled = $action == "edit" ? "disabled" : "";
             <div class="form-group">
                 <label class="control-label col-md-3 col-sm-4 col-xs-12">First Name <span>*</span> :</label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                    <?= $this->Form->input('firstname', array('placeholder' => 'First Name', array($disabled))); ?>
+                    <?= $this->Form->input('firstname', array('placeholder' => 'First Name')); ?>
                 </div>
             </div>
 
             <div class="form-group">
                 <label class="control-label col-md-3 col-sm-4 col-xs-12">Last Name :</label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
-                    <?= $this->Form->input('lastname', array('placeholder' => 'Last Name', array($disabled))); ?>
+                    <?= $this->Form->input('lastname', array('placeholder' => 'Last Name')); ?>
                 </div>
             </div>
             
