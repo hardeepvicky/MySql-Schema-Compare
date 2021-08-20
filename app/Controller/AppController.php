@@ -33,11 +33,24 @@ class AppController extends BaseController
         
         parent::beforeFilter();
         
-        if ( Configure::read("debug") == -1 || HALT_WEB)
+        if ( Configure::read("debug") == -1)
         {
             if ($this->params['controller'] != "Dashboards" || $this->params['action'] != "maintence")
             {
                 $this->redirect(array("controller" => 'Dashboards', 'action' => 'maintence', 'admin' => false));
+            }
+        }
+        
+        $ip_allow = Configure::read("ip_allow");
+        if ($ip_allow)
+        {
+            if ($this->params['controller'] != "Dashboards" || $this->params['action'] != "ip_block")
+            {
+                $client_ip = $this->request->clientIp();
+                if ( !($client_ip == "127.0.0.1" || in_array($client_ip, $ip_allow)) )
+                {
+                    $this->redirect(array("controller" => 'Dashboards', 'action' => 'ip_block', 'admin' => false));
+                }
             }
         }
         
