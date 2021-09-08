@@ -19,6 +19,12 @@ $summary_url = $this->Html->url(["action" => $action, 'is_summary' => 1]);
         <div class="row">
             <div class="col-md-6 col-sm-6 col-xs-12">
                 <div class="form-group">
+                    <label class="control-label col-md-4 col-sm-6 col-xs-12">Source Server :</label>
+                    <div class="col-md-5 col-sm-5 col-xs-12">
+                        <?= $this->Form->input('src_server', array('value' => ${$model . "src_server"}));?>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="control-label col-md-4 col-sm-6 col-xs-12">Source Database Name :</label>
                     <div class="col-md-5 col-sm-5 col-xs-12">
                         <?= $this->Form->input('src_db_name', array('value' => ${$model . "src_db_name"}));?>
@@ -26,6 +32,12 @@ $summary_url = $this->Html->url(["action" => $action, 'is_summary' => 1]);
                 </div>
             </div>
             <div class="col-md-6 col-sm-6 col-xs-12">
+                <div class="form-group">
+                    <label class="control-label col-md-4 col-sm-6 col-xs-12">Destination Server :</label>
+                    <div class="col-md-5 col-sm-5 col-xs-12">
+                        <?= $this->Form->input('dest_server', array('value' => ${$model . "dest_server"}));?>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label class="control-label col-md-4 col-sm-6 col-xs-12">Destination Database Name :</label>
                     <div class="col-md-5 col-sm-5 col-xs-12">

@@ -37,13 +37,13 @@ class Path
     const SQL_LOG = "files/SqlLog/";
 }
 
-class WebServiceType
+class ConnectionType
 {
-    const SUCCESS_FAILURE = [1 => "Success", -1 => "Failure", 0 => "Not-Complete"];
-    
-    const LOGIN = 1;
+    const LOCAL = 1;
+    const REMOTE = 2;
     
     public static $list = [
-        self::LOGIN => "Login"
+        self::LOCAL => "Local",
+        self::REMOTE => "Remote",
     ];
 }

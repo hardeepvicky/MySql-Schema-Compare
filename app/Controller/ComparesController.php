@@ -6,7 +6,9 @@ class ComparesController extends AppController
         $this->Redirect->urlToNamed();
 
         $conditions = $this->getSearchConditions(array(
+            array('model' => $this->modelClass, 'field' => "src_server", 'type' => 'string', 'view_field' => 'src_server'),            
             array('model' => $this->modelClass, 'field' => "src_db_name", 'type' => 'string', 'view_field' => 'src_db_name'),            
+            array('model' => $this->modelClass, 'field' => "dest_server", 'type' => 'string', 'view_field' => 'dest_server'),            
             array('model' => $this->modelClass, 'field' => "dest_db_name", 'type' => 'string', 'view_field' => 'dest_db_name'),            
         ));
         
@@ -47,399 +49,515 @@ class ComparesController extends AppController
             throw new Exception("Invalid Id : $id");
         }
         
-        $this->_check_database_exist($record[$this->modelClass]['src_db_name']);
-        $this->_check_database_exist($record[$this->modelClass]['dest_db_name']);
+        $mysqlSrc = $mysqlDest = null;
         
-        $src_db = $this->_find_table_meta($record[$this->modelClass]['src_db_name']);
-        $dest_db = $this->_find_table_meta($record[$this->modelClass]['dest_db_name']);
+        require_once(APP . "vendor/MysqlCustom.php");
         
-        $records = [
-            'tables' => [],
-            'sql' => [],
-        ];
+        $records = $this->Compare->query("SHOW DATABASES");
         
-        $dest_table_list = [];
-        foreach($dest_db['tables'] as $table_name => $table_arr)
+        $db_list = Set::classicExtract($records, "{n}.SCHEMATA.Database");
+        
+        try
         {
-            $dest_table_list[] = $table_name;
-        }
-        
-        foreach($src_db['tables'] as $table_name => $table_arr)
-        {
-            $columns = [];
-            foreach($table_arr['columns'] as $field_name => $field_options)
+            if ($record[$this->modelClass]['src_conn_type'] == ConnectionType::LOCAL)
             {
-                $length = "";
-                switch($field_options['DATA_TYPE'])
+                if ( !in_array($record[$this->modelClass]['src_db_name'], $db_list) )
                 {
-                    case "int";
-                        $length = $field_options['NUMERIC_PRECISION'];
-                        break;
-                    case "varchar";
-                        $length = $field_options['CHARACTER_MAXIMUM_LENGTH'];
-                        break;
-                }
-
-                $null = "";
-                if ( strtoupper( $field_options['IS_NULLABLE'] ) == 'YES' )
-                {
-                    $null = "Yes";
+                    throw new Exception("Database " . $record[$this->modelClass]['src_db_name'] . " is exist in local");
                 }
                 
-                $unsigned = "";
-                if ( strpos($field_options['COLUMN_TYPE'], "unsigned") !== false )
-                {
-                    $unsigned = "Yes";
-                }
-
-                $unique = "";
-                if ( strpos($field_options['COLUMN_KEY'], "UNI") !== false )
-                {
-                    $unique = "Yes";
-                }
-
-                $primary = "";
-
-                if ( strpos($field_options['COLUMN_KEY'], "PRI") !== false )
-                {
-                    $primary = "Yes";
-                }
-                
-                $index = "";
-                if ( strpos($field_options['COLUMN_KEY'], "MUL") !== false )
-                {
-                    $index = "Yes";
-                }
-
-                $autoincrement = "";
-
-                if ( strpos($field_options['EXTRA'], "auto_increment") !== false )
-                {
-                    $autoincrement = "Yes";
-                }
-                
-                $columns[$field_name]["src"] = [
-                    "data_type" => $field_options['DATA_TYPE'],
-                    "null" => $null,
-                    "length" => $length,
-                    "unsigned" => $unsigned,
-                    "unique" => $unique,
-                    "primary" => $primary,
-                    "index" => $index,
-                    "autoincrement" => $autoincrement,
+                $project_config = new DATABASE_CONFIG();
+                $config = [
+                    "server" => $project_config->default['host'],
+                    "username" => $project_config->default['login'],
+                    "password" => $project_config->default['password'],
+                    "database" => $project_config->default['database'],
                 ];
+
+                if ($project_config->default['port'])
+                {
+                    $config['port'] = $project_config->default['port'];
+                }
+                else
+                {
+                    $config['port'] = 3306;
+                }
+                
+                $mysqlSrc = new MysqlCustom($config);
             }
-            
-            if ( !in_array($table_name, $dest_table_list))
+            else
             {
-                $records['tables'][$table_name]['is_new'] = true;
-            }
-            
-            $records['tables'][$table_name]['columns'] = $columns;
-        }
-        
-        foreach($dest_db['tables'] as $table_name => $table_arr)
-        {
-            $columns = [];
-            foreach($table_arr['columns'] as $field_name => $field_options)
-            {
-                $length = "";
-                switch($field_options['DATA_TYPE'])
-                {
-                    case "int";
-                        $length = $field_options['NUMERIC_PRECISION'];
-                        break;
-                    case "varchar";
-                        $length = $field_options['CHARACTER_MAXIMUM_LENGTH'];
-                        break;
-                }
+                error_reporting(0);
 
-                $null = "";
-                if ( strtoupper( $field_options['IS_NULLABLE'] ) == 'YES' )
-                {
-                    $null = "Yes";
-                }
-                
-                $unsigned = "";
-                if ( strpos($field_options['COLUMN_TYPE'], "unsigned") !== false )
-                {
-                    $unsigned = "Yes";
-                }
-
-                $unique = "";
-                if ( strpos($field_options['COLUMN_KEY'], "UNI") !== false )
-                {
-                    $unique = "Yes";
-                }
-
-                $primary = "";
-
-                if ( strpos($field_options['COLUMN_KEY'], "PRI") !== false )
-                {
-                    $primary = "Yes";
-                }
-                
-                $index = "";
-                if ( strpos($field_options['COLUMN_KEY'], "MUL") !== false )
-                {
-                    $index = "Yes";
-                }
-
-                $autoincrement = "";
-
-                if ( strpos($field_options['EXTRA'], "auto_increment") !== false )
-                {
-                    $autoincrement = "Yes";
-                }
-                
-                $columns[$field_name]["dest"] = [
-                    "data_type" => $field_options['DATA_TYPE'],
-                    "null" => $null,
-                    "length" => $length,
-                    "unsigned" => $unsigned,
-                    "unique" => $unique,
-                    "primary" => $primary,
-                    "index" => $index,
-                    "autoincrement" => $autoincrement,
+                $config = [
+                    "server" => $record[$this->modelClass]['src_server'],
+                    "username" => $record[$this->modelClass]['src_username'],
+                    "password" => $record[$this->modelClass]['src_password'],
+                    "database" => $record[$this->modelClass]['src_db_name'],
                 ];
+
+                if ($record[$this->modelClass]['src_port'])
+                {
+                    $config['port'] = $record[$this->modelClass]['src_port'];
+                }
+                else
+                {
+                    $config['port'] = 3306;
+                }
+
+                $mysqlSrc = new MysqlCustom($config);
+            }
+
+            if ($record[$this->modelClass]['dest_conn_type'] == ConnectionType::LOCAL)
+            {
+                if ( !in_array($record[$this->modelClass]['dest_db_name'], $db_list) )
+                {
+                    throw new Exception("Database " . $record[$this->modelClass]['dest_db_name'] . " is exist in local");
+                }
+                
+                $project_config = new DATABASE_CONFIG();
+                $config = [
+                    "server" => $project_config->default['host'],
+                    "username" => $project_config->default['login'],
+                    "password" => $project_config->default['password'],
+                    "database" => $project_config->default['database'],
+                ];
+
+                if ($project_config->default['port'])
+                {
+                    $config['port'] = $project_config->default['port'];
+                }
+                else
+                {
+                    $config['port'] = 3306;
+                }
+                
+                $mysqlDest = new MysqlCustom($config);
+            }
+            else
+            {
+                error_reporting(0);
+
+                $config = [
+                    "server" => $record[$this->modelClass]['dest_server'],
+                    "username" => $record[$this->modelClass]['dest_username'],
+                    "password" => $record[$this->modelClass]['dest_password'],
+                    "database" => $record[$this->modelClass]['dest_db_name'],
+                ];
+
+                if ($record[$this->modelClass]['dest_port'])
+                {
+                    $config['port'] = $record[$this->modelClass]['dest_port'];
+                }
+                else
+                {
+                    $config['port'] = 3306;
+                }
+
+                $mysqlDest = new MysqlCustom($config);
+            }
+
+            $src_db = $this->_find_table_meta($mysqlSrc);
+            $dest_db = $this->_find_table_meta($mysqlDest);
+
+            $records = [
+                'tables' => [],
+                'sql' => [],
+            ];
+
+            $dest_table_list = [];
+            foreach($dest_db['tables'] as $table_name => $table_arr)
+            {
+                $dest_table_list[] = $table_name;
             }
             
-            if (!isset($records['tables'][$table_name]))
+            foreach($src_db['tables'] as $table_name => $table_arr)
             {
-                $records['tables'][$table_name]['is_delete'] = true;
+                $columns = [];
+                foreach($table_arr['columns'] as $field_name => $field_options)
+                {
+                    $length = "";
+                    switch($field_options['DATA_TYPE'])
+                    {
+                        case "int";
+                            $length = $field_options['NUMERIC_PRECISION'];
+                            break;
+                        case "varchar";
+                            $length = $field_options['CHARACTER_MAXIMUM_LENGTH'];
+                            break;
+                    }
+
+                    $null = "";
+                    if ( strtoupper( $field_options['IS_NULLABLE'] ) == 'YES' )
+                    {
+                        $null = "Yes";
+                    }
+
+                    $unsigned = "";
+                    if ( strpos($field_options['COLUMN_TYPE'], "unsigned") !== false )
+                    {
+                        $unsigned = "Yes";
+                    }
+
+                    $unique = "";
+                    if ( strpos($field_options['COLUMN_KEY'], "UNI") !== false )
+                    {
+                        $unique = "Yes";
+                    }
+
+                    $primary = "";
+
+                    if ( strpos($field_options['COLUMN_KEY'], "PRI") !== false )
+                    {
+                        $primary = "Yes";
+                    }
+
+                    $index = "";
+                    if ( strpos($field_options['COLUMN_KEY'], "MUL") !== false )
+                    {
+                        $index = "Yes";
+                    }
+
+                    $autoincrement = "";
+
+                    if ( strpos($field_options['EXTRA'], "auto_increment") !== false )
+                    {
+                        $autoincrement = "Yes";
+                    }
+
+                    $columns[$field_name]["src"] = [
+                        "data_type" => $field_options['DATA_TYPE'],
+                        "null" => $null,
+                        "length" => $length,
+                        "unsigned" => $unsigned,
+                        "unique" => $unique,
+                        "primary" => $primary,
+                        "index" => $index,
+                        "autoincrement" => $autoincrement,
+                    ];
+                }
+
+                if ( !in_array($table_name, $dest_table_list))
+                {
+                    $records['tables'][$table_name]['is_new'] = true;
+                }
+
                 $records['tables'][$table_name]['columns'] = $columns;
             }
-            else
+
+            foreach($dest_db['tables'] as $table_name => $table_arr)
             {
-                $records['tables'][$table_name]['columns'] = array_merge_recursive($records['tables'][$table_name]['columns'], $columns);
-
-                foreach($records['tables'][$table_name]['columns'] as $field_name => $arr)
+                $columns = [];
+                foreach($table_arr['columns'] as $field_name => $field_options)
                 {
-                    if ( !isset($arr['dest']) )
+                    $length = "";
+                    switch($field_options['DATA_TYPE'])
                     {
-                        $records['tables'][$table_name]['columns'][$field_name]['is_new'] = true;
+                        case "int";
+                            $length = $field_options['NUMERIC_PRECISION'];
+                            break;
+                        case "varchar";
+                            $length = $field_options['CHARACTER_MAXIMUM_LENGTH'];
+                            break;
                     }
 
-                    if ( !isset($arr['src']) )
+                    $null = "";
+                    if ( strtoupper( $field_options['IS_NULLABLE'] ) == 'YES' )
                     {
-                        $records['tables'][$table_name]['columns'][$field_name]['is_delete'] = true;
+                        $null = "Yes";
                     }
 
-                    if ( isset($arr['src']) && isset($arr['dest']) )
+                    $unsigned = "";
+                    if ( strpos($field_options['COLUMN_TYPE'], "unsigned") !== false )
                     {
-                        foreach($arr['src'] as $attr_key => $attr_value)
+                        $unsigned = "Yes";
+                    }
+
+                    $unique = "";
+                    if ( strpos($field_options['COLUMN_KEY'], "UNI") !== false )
+                    {
+                        $unique = "Yes";
+                    }
+
+                    $primary = "";
+
+                    if ( strpos($field_options['COLUMN_KEY'], "PRI") !== false )
+                    {
+                        $primary = "Yes";
+                    }
+
+                    $index = "";
+                    if ( strpos($field_options['COLUMN_KEY'], "MUL") !== false )
+                    {
+                        $index = "Yes";
+                    }
+
+                    $autoincrement = "";
+
+                    if ( strpos($field_options['EXTRA'], "auto_increment") !== false )
+                    {
+                        $autoincrement = "Yes";
+                    }
+
+                    $columns[$field_name]["dest"] = [
+                        "data_type" => $field_options['DATA_TYPE'],
+                        "null" => $null,
+                        "length" => $length,
+                        "unsigned" => $unsigned,
+                        "unique" => $unique,
+                        "primary" => $primary,
+                        "index" => $index,
+                        "autoincrement" => $autoincrement,
+                    ];
+                }
+
+                if (!isset($records['tables'][$table_name]))
+                {
+                    $records['tables'][$table_name]['is_delete'] = true;
+                    $records['tables'][$table_name]['columns'] = $columns;
+                }
+                else
+                {
+                    $records['tables'][$table_name]['columns'] = array_merge_recursive($records['tables'][$table_name]['columns'], $columns);
+
+                    foreach($records['tables'][$table_name]['columns'] as $field_name => $arr)
+                    {
+                        if ( !isset($arr['dest']) )
                         {
-                            if ( $attr_value != $arr['dest'][$attr_key] )
+                            $records['tables'][$table_name]['columns'][$field_name]['is_new'] = true;
+                        }
+
+                        if ( !isset($arr['src']) )
+                        {
+                            $records['tables'][$table_name]['columns'][$field_name]['is_delete'] = true;
+                        }
+
+                        if ( isset($arr['src']) && isset($arr['dest']) )
+                        {
+                            foreach($arr['src'] as $attr_key => $attr_value)
                             {
-                                $records['tables'][$table_name]['columns'][$field_name]['is_change'] = true;
+                                if ( $attr_value != $arr['dest'][$attr_key] )
+                                {
+                                    $records['tables'][$table_name]['columns'][$field_name]['is_change'] = true;
+                                }
                             }
                         }
+                    }
+                }
+            }
+
+            $dest_db_name = $mysqlDest->getDBName();
+
+            $q = "SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = '$dest_db_name';";
+
+            $temp = $mysqlDest->select($q);
+
+            if (!$temp)
+            {
+                throw new Exception("Default Charset not found");
+            }
+            
+            $default_char_set = $temp[0]['default_character_set_name'];
+
+
+            $records['sql'] = [
+                "new_table" => [],
+                "delete_table" => [],
+                "new_column" => [],
+                "delete_column" => [],
+                "change_column" => [],
+            ];
+
+            foreach($records['tables'] as $table_name => $table_arr)
+            {
+                if ( isset($table_arr['is_new']) )
+                {
+                    $attr_list = [];
+                    foreach($table_arr['columns'] as $column_name => $column_arr)
+                    {
+                        $attr_list[] = $this->_create_table_field($column_name, $column_arr['src']);
+                    }
+
+                    foreach($table_arr['columns'] as $column_name => $column_arr)
+                    {
+                        $str = $this->_create_table_field_for_primary($column_name, $column_arr['src']);
+
+                        if ($str)
+                        {
+                            $attr_list[] = $str;
+                        }
+                    }
+
+                    foreach($table_arr['columns'] as $column_name => $column_arr)
+                    {
+                        $str = $this->_create_table_field_for_unique($column_name, $column_arr['src']);
+
+                        if ($str)
+                        {
+                            $attr_list[] = $str;
+                        }
+                    }
+
+                    foreach($table_arr['columns'] as $column_name => $column_arr)
+                    {
+                        $str = $this->_create_table_field_for_index($column_name, $column_arr['src']);
+
+                        if ($str)
+                        {
+                            $attr_list[] = $str;
+                        }
+                    }
+
+                    $sql_str = "CREATE TABLE `$dest_db_name`.`$table_name` (";
+                    $sql_str .= implode(",", $attr_list);
+                    $sql_str .= ")ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=$default_char_set";
+
+                    $records['sql']['new_table'][$table_name][] = $sql_str;
+                }
+                else if ( isset($table_arr['is_delete']) )
+                {
+                    $records['sql']['delete_table'][$table_name][] = "DROP TABLE `$dest_db_name`.`$table_name`";
+                }
+                else
+                {
+                    $prev_col_name = "";
+                    foreach($table_arr['columns'] as $column_name => $column_arr)
+                    {
+                        if ( isset ($column_arr['is_new']) )
+                        {
+                            $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name` ";
+
+                            $sql_str .= $this->_new_field($column_name, $column_arr['src'], $prev_col_name);
+
+                            $records['sql']['new_column'][$table_name][] = $sql_str;
+                        }
+                        else if ( isset ($column_arr['is_change']) )
+                        {	
+                            if (
+                                $column_arr['src']['data_type'] != $column_arr['dest']['data_type'] 
+                                || $column_arr['src']['length'] != $column_arr['dest']['length'] 
+                                || $column_arr['src']['null'] != $column_arr['dest']['null'] 
+                                || $column_arr['src']['unsigned'] != $column_arr['dest']['unsigned'] 
+                                || $column_arr['src']['autoincrement'] != $column_arr['dest']['autoincrement'] 
+                            )
+                            {
+                                $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
+
+                                $sql_str .= " CHANGE COLUMN `$column_name` " . $this->_create_table_field($column_name, $column_arr['src']);
+
+                                $records['sql']['change_column'][$table_name][] = $sql_str;
+                            }
+
+                            if (
+                                $column_arr['src']['unique'] != $column_arr['dest']['unique'] 
+                            )
+                            {
+                                if ($column_arr['src']['unique'] == "")
+                                {
+                                    $index_list = $this->_find_index_on_column($src_db_name, $table_name, $column_name);
+
+                                    foreach($index_list as $index_name)
+                                    {                                
+                                        $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
+
+                                        $sql_str .= " DROP INDEX `$index_name`";
+
+                                        $records['sql']['change_column'][$table_name][] = $sql_str;
+                                    }
+                                }
+                                else
+                                {
+                                    $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
+
+                                    $sql_str .= " ADD UNIQUE INDEX `$column_name" . "_UNIQUE` (`$column_name` ASC)";
+
+                                    $records['sql']['change_column'][$table_name][] = $sql_str;
+                                }
+                            }
+
+                            if (
+                                $column_arr['src']['primary'] != $column_arr['dest']['primary'] 
+                            )
+                            {
+                                if ($column_arr['src']['primary'] == "")
+                                {
+                                    $index_list = $this->_find_index_on_column($src_db_name, $table_name, $column_name);
+
+                                    foreach($index_list as $index_name)
+                                    {                                
+                                        $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
+
+                                        $sql_str .= " DROP INDEX `$index_name`";
+
+                                        $records['sql']['change_column'][$table_name][] = $sql_str;
+                                    }
+                                }
+                                else
+                                {
+                                    $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
+
+                                    $sql_str .= " ADD PRIMARY KEY (`$column_name`)";
+
+                                    $records['sql']['change_column'][$table_name][] = $sql_str;
+                                }
+                            }
+
+                            if (
+                                $column_arr['src']['index'] != $column_arr['dest']['index'] 
+                            )
+                            {
+                                if ($column_arr['src']['index'] == "")
+                                {
+                                    $index_list = $this->_find_index_on_column($src_db_name, $table_name, $column_name);
+
+                                    foreach($index_list as $index_name)
+                                    {                                
+                                        $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
+
+                                        $sql_str .= " DROP INDEX `$index_name`";
+
+                                        $records['sql']['change_column'][$table_name][] = $sql_str;
+                                    }
+                                }
+                                else
+                                {
+                                    $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
+
+                                    $sql_str .= " ADD KEY (`$column_name`)";
+
+                                    $records['sql']['change_column'][$table_name][] = $sql_str;
+                                }
+                            }
+                        }
+                        else if ( isset ($column_arr['is_delete']) )
+                        {
+                            $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name` DROP COLUMN `$column_name`";
+
+                            $index_list = $this->_find_index_on_column($dest_db_name, $table_name, $column_name);
+
+                            foreach($index_list as $index_name)
+                            {                                
+                                $sql_str .= ", DROP INDEX `$index_name`";
+                            }
+
+                            $records['sql']['delete_column'][$table_name][] = $sql_str;
+                        }
+
+                        $prev_col_name = $column_name;
                     }
                 }
             }
         }
-		
-        $src_db_name = $record[$this->modelClass]['src_db_name'];
-        $dest_db_name = $record[$this->modelClass]['dest_db_name'];
-        
-        
-        $q = "SELECT default_character_set_name FROM information_schema.SCHEMATA WHERE schema_name = '$src_db_name';";
-        
-        $temp = $this->Compare->query($q);
-        
-        if (!$temp)
+        catch(Exception $ex)
         {
-            throw new Exception("Default Charset not found");
-        }
-        
-        $default_char_set = $temp[0]['SCHEMATA']['default_character_set_name'];
-        
-        
-        $records['sql'] = [
-            "new_table" => [],
-            "delete_table" => [],
-            "new_column" => [],
-            "delete_column" => [],
-            "change_column" => [],
-        ];
-
-        foreach($records['tables'] as $table_name => $table_arr)
-        {
-            if ( isset($table_arr['is_new']) )
+            if ($mysqlSrc)
             {
-                $attr_list = [];
-                foreach($table_arr['columns'] as $column_name => $column_arr)
-                {
-                    $attr_list[] = $this->_create_table_field($column_name, $column_arr['src']);
-                }
-                
-                foreach($table_arr['columns'] as $column_name => $column_arr)
-                {
-                    $str = $this->_create_table_field_for_primary($column_name, $column_arr['src']);
-                    
-                    if ($str)
-                    {
-                        $attr_list[] = $str;
-                    }
-                }
-                
-                foreach($table_arr['columns'] as $column_name => $column_arr)
-                {
-                    $str = $this->_create_table_field_for_unique($column_name, $column_arr['src']);
-                    
-                    if ($str)
-                    {
-                        $attr_list[] = $str;
-                    }
-                }
-                
-                foreach($table_arr['columns'] as $column_name => $column_arr)
-                {
-                    $str = $this->_create_table_field_for_index($column_name, $column_arr['src']);
-                    
-                    if ($str)
-                    {
-                        $attr_list[] = $str;
-                    }
-                }
-                
-                $sql_str = "CREATE TABLE `$dest_db_name`.`$table_name` (";
-                $sql_str .= implode(",", $attr_list);
-                $sql_str .= ")ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=$default_char_set";
-                
-                $records['sql']['new_table'][$table_name][] = $sql_str;
+                $mysqlSrc->close();
             }
-            else if ( isset($table_arr['is_delete']) )
+            
+            if ($mysqlDest)
             {
-                $records['sql']['delete_table'][$table_name][] = "DROP TABLE `$dest_db_name`.`$table_name`";
-            }
-            else
-            {
-                $prev_col_name = "";
-                foreach($table_arr['columns'] as $column_name => $column_arr)
-                {
-                    if ( isset ($column_arr['is_new']) )
-                    {
-                        $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name` ";
-                        
-                        $sql_str .= $this->_new_field($column_name, $column_arr['src'], $prev_col_name);
-                        
-                        $records['sql']['new_column'][$table_name][] = $sql_str;
-                    }
-                    else if ( isset ($column_arr['is_change']) )
-                    {	
-                        if (
-                            $column_arr['src']['data_type'] != $column_arr['dest']['data_type'] 
-                            || $column_arr['src']['length'] != $column_arr['dest']['length'] 
-                            || $column_arr['src']['null'] != $column_arr['dest']['null'] 
-                            || $column_arr['src']['unsigned'] != $column_arr['dest']['unsigned'] 
-                            || $column_arr['src']['autoincrement'] != $column_arr['dest']['autoincrement'] 
-                        )
-                        {
-                            $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
-                        
-                            $sql_str .= " CHANGE COLUMN `$column_name` " . $this->_create_table_field($column_name, $column_arr['src']);
-                            
-                            $records['sql']['change_column'][$table_name][] = $sql_str;
-                        }
-                        
-                        if (
-                            $column_arr['src']['unique'] != $column_arr['dest']['unique'] 
-                        )
-                        {
-                            if ($column_arr['src']['unique'] == "")
-                            {
-                                $index_list = $this->_find_index_on_column($src_db_name, $table_name, $column_name);
-                                
-                                foreach($index_list as $index_name)
-                                {                                
-                                    $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
-                        
-                                    $sql_str .= " DROP INDEX `$index_name`";
-                            
-                                    $records['sql']['change_column'][$table_name][] = $sql_str;
-                                }
-                            }
-                            else
-                            {
-                                $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
-                        
-                                $sql_str .= " ADD UNIQUE INDEX `$column_name" . "_UNIQUE` (`$column_name` ASC)";
-
-                                $records['sql']['change_column'][$table_name][] = $sql_str;
-                            }
-                        }
-                        
-                        if (
-                            $column_arr['src']['primary'] != $column_arr['dest']['primary'] 
-                        )
-                        {
-                            if ($column_arr['src']['primary'] == "")
-                            {
-                                $index_list = $this->_find_index_on_column($src_db_name, $table_name, $column_name);
-                                
-                                foreach($index_list as $index_name)
-                                {                                
-                                    $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
-                        
-                                    $sql_str .= " DROP INDEX `$index_name`";
-                            
-                                    $records['sql']['change_column'][$table_name][] = $sql_str;
-                                }
-                            }
-                            else
-                            {
-                                $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
-                        
-                                $sql_str .= " ADD PRIMARY KEY (`$column_name`)";
-
-                                $records['sql']['change_column'][$table_name][] = $sql_str;
-                            }
-                        }
-                        
-                        if (
-                            $column_arr['src']['index'] != $column_arr['dest']['index'] 
-                        )
-                        {
-                            if ($column_arr['src']['index'] == "")
-                            {
-                                $index_list = $this->_find_index_on_column($src_db_name, $table_name, $column_name);
-                                
-                                foreach($index_list as $index_name)
-                                {                                
-                                    $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
-                        
-                                    $sql_str .= " DROP INDEX `$index_name`";
-                            
-                                    $records['sql']['change_column'][$table_name][] = $sql_str;
-                                }
-                            }
-                            else
-                            {
-                                $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name`";
-                        
-                                $sql_str .= " ADD KEY (`$column_name`)";
-
-                                $records['sql']['change_column'][$table_name][] = $sql_str;
-                            }
-                        }
-                    }
-                    else if ( isset ($column_arr['is_delete']) )
-                    {
-                        $sql_str = "ALTER TABLE `$dest_db_name`.`$table_name` DROP COLUMN `$column_name`";
-                        
-                        $index_list = $this->_find_index_on_column($dest_db_name, $table_name, $column_name);
-                                
-                        foreach($index_list as $index_name)
-                        {                                
-                            $sql_str .= ", DROP INDEX `$index_name`";
-                        }
-                        
-                        $records['sql']['delete_column'][$table_name][] = $sql_str;
-                    }
-                    
-                    $prev_col_name = $column_name;
-                }
+                $mysqlDest->close();
             }
         }
 		
@@ -475,7 +593,7 @@ class ComparesController extends AppController
         }
         else
         {
-			$str .= " NOT NULL";
+            $str .= " NOT NULL";
         }
             
         if ($attr['autoincrement'])
@@ -570,31 +688,21 @@ class ComparesController extends AppController
         return $list;
     }
     
-    private function _check_database_exist($db_name)
-    {
-        $q = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$db_name'";
-        
-        $temp = $this->{$this->modelClass}->query($q);
-        
-        if (!$temp)
-        {
-            throw new Exception("Database `$db_name` is not exist");
-        }
-    }
-    
-    private function _find_table_meta($db_name)
+    private function _find_table_meta(MysqlCustom $conn)
     {
         $result = [
             "tables" => []
         ];
         
+        $db_name = $conn->getDBName();
+        
         $q = "SHOW FULL TABLES FROM $db_name where Table_Type != 'VIEW'";
         
-        $temp = $this->Compare->query($q);
+        $temp = $conn->select($q);
         
         foreach($temp as $arr)
         {
-            $table_name = $arr['TABLE_NAMES']["Tables_in_" . $db_name];
+            $table_name = $arr["Tables_in_" . $db_name];
             $result["tables"][$table_name] = [];
         }
         
@@ -606,11 +714,11 @@ class ComparesController extends AppController
                     INFORMATION_SCHEMA.COLUMNS
                   WHERE TABLE_SCHEMA = '$db_name' AND TABLE_NAME = '$table_name';";
             
-            $temp = $this->Compare->query($q);
+            $temp = $conn->select($q);
             
             foreach($temp as $arr)
             {
-                $result["tables"][$table_name]["columns"][$arr['COLUMNS']['COLUMN_NAME']] = $arr['COLUMNS'];
+                $result["tables"][$table_name]["columns"][$arr['COLUMN_NAME']] = $arr;
             }
         }
         

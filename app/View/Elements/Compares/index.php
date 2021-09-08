@@ -5,7 +5,9 @@
             <thead>
                 <tr>
                     <th style="width : 10%;"> <?= $this->Paginator->sort('id', __('Id'), ["class" => "ajax-summary"]); ?> </th>
+                    <th> <?= $this->Paginator->sort('src_server', __('Source Server'), ["class" => "ajax-summary"]); ?> </th>
                     <th> <?= $this->Paginator->sort('src_db_name', __('Source Database Name'), ["class" => "ajax-summary"]); ?> </th>
+                    <th> <?= $this->Paginator->sort('src_server', __('Destination Server'), ["class" => "ajax-summary"]); ?> </th>
                     <th> <?= $this->Paginator->sort('dest_db_name', __('Destination Database Name'), ["class" => "ajax-summary"]); ?> </th>
                     <th style="width : 20%;"> Actions </th>
                 </tr>
@@ -14,7 +16,9 @@
                 <?php foreach ($records as $record): ?>
                 <tr class="odd gradeX center">
                     <td><?= $record[$model]['id']; ?></td>
+                    <td><?= $record[$model]['src_server']; ?></td>
                     <td><?= $record[$model]['src_db_name']; ?></td>
+                    <td><?= $record[$model]['dest_server']; ?></td>
                     <td><?= $record[$model]['dest_db_name']; ?></td>
                     <td>
                         <?php $url = $this->Html->url(array("action" => "compare", $record[$model]['id'])); ?>
