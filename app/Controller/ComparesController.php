@@ -73,7 +73,7 @@ class ComparesController extends AppController
                     "server" => $project_config->default['host'],
                     "username" => $project_config->default['login'],
                     "password" => $project_config->default['password'],
-                    "database" => $project_config->default['database'],
+                    "database" => $src_db_name,
                 ];
 
                 if ($project_config->default['port'])
@@ -95,7 +95,7 @@ class ComparesController extends AppController
                     "server" => $record[$this->modelClass]['src_server'],
                     "username" => $record[$this->modelClass]['src_username'],
                     "password" => $record[$this->modelClass]['src_password'],
-                    "database" => $record[$this->modelClass]['src_db_name'],
+                    "database" => $src_db_name,
                 ];
 
                 if ($record[$this->modelClass]['src_port'])
@@ -122,7 +122,7 @@ class ComparesController extends AppController
                     "server" => $project_config->default['host'],
                     "username" => $project_config->default['login'],
                     "password" => $project_config->default['password'],
-                    "database" => $project_config->default['database'],
+                    "database" => $dest_db_name,
                 ];
 
                 if ($project_config->default['port'])
@@ -144,7 +144,7 @@ class ComparesController extends AppController
                     "server" => $record[$this->modelClass]['dest_server'],
                     "username" => $record[$this->modelClass]['dest_username'],
                     "password" => $record[$this->modelClass]['dest_password'],
-                    "database" => $record[$this->modelClass]['dest_db_name'],
+                    "database" => $dest_db_name,
                 ];
 
                 if ($record[$this->modelClass]['dest_port'])
