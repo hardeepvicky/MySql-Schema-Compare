@@ -562,9 +562,6 @@ class ComparesController extends AppController
                 $mysqlDest->close();
             }
         }
-
-        debug($mysqlDest->logs);
-        debug($mysqlSrc->logs);
 		
         $this->set(compact("records", "src_db_name", "dest_db_name"));
     }
