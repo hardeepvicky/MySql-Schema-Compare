@@ -59,11 +59,13 @@ class ComparesController extends AppController
         
         try
         {
+            $src_db_name = $record[$this->modelClass]['src_db_name'];
+            $dest_db_name = $record[$this->modelClass]['dest_db_name'];
             if ($record[$this->modelClass]['src_conn_type'] == ConnectionType::LOCAL)
             {
-                if ( !in_array($record[$this->modelClass]['src_db_name'], $db_list) )
+                if ( !in_array($src_db_name, $db_list) )
                 {
-                    throw new Exception("Database " . $record[$this->modelClass]['src_db_name'] . " is exist in local");
+                    throw new Exception("Database $src_db_name is exist in local");
                 }
                 
                 $project_config = new DATABASE_CONFIG();
@@ -110,9 +112,9 @@ class ComparesController extends AppController
 
             if ($record[$this->modelClass]['dest_conn_type'] == ConnectionType::LOCAL)
             {
-                if ( !in_array($record[$this->modelClass]['dest_db_name'], $db_list) )
+                if ( !in_array($dest_db_name, $db_list) )
                 {
-                    throw new Exception("Database " . $record[$this->modelClass]['dest_db_name'] . " is exist in local");
+                    throw new Exception("Database $dest_db_name is exist in local");
                 }
                 
                 $project_config = new DATABASE_CONFIG();
