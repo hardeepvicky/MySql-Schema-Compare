@@ -87,7 +87,7 @@ $disabled = $action == "edit" ? "disabled" : "";
                 </div>
             </div>
             <div class="form-group dest_remote">
-                <label class="control-label col-md-3 col-sm-4 col-xs-12">Destination Database Username <span>*</span> :</label>
+                <label class="control-label col-md-3 col-sm-4 col-xs-12">Destination Database Password <span>*</span> :</label>
                 <div class="col-md-6 col-sm-6 col-xs-12">
                     <?= $this->Form->input('dest_password', ["class" => "form-control required-input"]); ?>
                 </div>

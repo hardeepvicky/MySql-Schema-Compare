@@ -1,8 +1,8 @@
 -- MySQL dump 10.13  Distrib 5.6.23, for Win32 (x86)
 --
--- Host: 127.0.0.1    Database: mysql_schema_compare
+-- Host: localhost    Database: db_compare
 -- ------------------------------------------------------
--- Server version	5.5.5-10.4.11-MariaDB
+-- Server version	5.5.5-10.4.24-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -114,16 +114,35 @@ DROP TABLE IF EXISTS `compares`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `compares` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `src_conn_type` int(1) NOT NULL COMMENT '1=local,2=remote',
+  `src_server` varchar(45) DEFAULT NULL,
+  `src_username` varchar(45) DEFAULT NULL,
+  `src_password` varchar(45) DEFAULT NULL,
+  `src_port` int(11) DEFAULT NULL,
   `src_db_name` varchar(45) NOT NULL,
+  `dest_conn_type` int(1) NOT NULL,
+  `dest_server` varchar(45) DEFAULT NULL,
+  `dest_username` varchar(45) DEFAULT NULL,
+  `dest_password` varchar(45) DEFAULT NULL,
+  `dest_port` int(11) DEFAULT NULL,
   `dest_db_name` varchar(45) NOT NULL,
   `created` datetime NOT NULL,
   `created_by` int(10) unsigned NOT NULL,
   `modified` datetime NOT NULL,
   `modified_by` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `compares`
+--
+
+LOCK TABLES `compares` WRITE;
+/*!40000 ALTER TABLE `compares` DISABLE KEYS */;
+INSERT INTO `compares` VALUES (2,1,'','','',NULL,'erp_stagging',1,'','','',NULL,'erp_live','2022-07-13 15:26:41',0,'2022-07-13 15:31:55',0);
+/*!40000 ALTER TABLE `compares` ENABLE KEYS */;
+UNLOCK TABLES;
 
 --
 -- Table structure for table `groups`
@@ -197,11 +216,11 @@ INSERT INTO `users` VALUES (1,1,'admin','9fc837dccedebd78b92c5189a0c5930172a72e7
 UNLOCK TABLES;
 
 --
--- Dumping events for database 'mysql_schema_compare'
+-- Dumping events for database 'db_compare'
 --
 
 --
--- Dumping routines for database 'mysql_schema_compare'
+-- Dumping routines for database 'db_compare'
 --
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -213,4 +232,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-07-27 15:53:22
+-- Dump completed on 2022-07-13 17:55:55
